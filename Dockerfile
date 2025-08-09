@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     nginx \
+    gettext-base \
     libpq-dev
 
 # Install PHP extensions required by Laravel for PostgreSQL
