@@ -4,7 +4,7 @@ FROM php:8.3-fpm
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies needed for Laravel and PostgreSQL
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -17,30 +17,31 @@ RUN apt-get update && apt-get install -y \
     gettext-base \
     libpq-dev
 
-# Install PHP extensions required by Laravel for PostgreSQL
+# Install PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
+# PHP-FPM config
 COPY docker/php-fpm-pool.conf /etc/php/8.3/fpm/pool.d/www.conf
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy existing application directory contents
+# Copy app files
 COPY . .
 
-# Install PHP dependencies with Composer
+# Install PHP dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Set permissions for Laravel
+# Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Copy Nginx config and startup script
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy Nginx template and startup script
+COPY docker/default.conf.template /etc/nginx/conf.d/default.conf.template
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Expose port 80
+# Expose port (Render will override with $PORT)
 EXPOSE 80
 
-# Run the startup script
+# Start
 CMD ["/start.sh"]
