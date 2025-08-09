@@ -1,14 +1,13 @@
 #!/bin/bash
+
+# Exit immediately if a command exits with a non-zero status.
 set -e
 
-# Run migrations
+# Run database migrations
 php /var/www/html/artisan migrate --force
 
-# Replace ${PORT} in template → actual Nginx config
-envsubst '$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
-
-# Start PHP-FPM in background
+# Start PHP-FPM in the background
 php-fpm &
 
-# Start Nginx in foreground
+# Start Nginx in the foreground
 nginx -g "daemon off;"
