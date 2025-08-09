@@ -1,17 +1,16 @@
-# Use a standard PHP and Nginx image
-FROM richarvey/nginx-php-fpm:3.3.0
+# Use a stable, well-maintained PHP 8.3 + Nginx image
+FROM thecodingmachine/php:8.3-v4-nginx
 
-# Copy our Nginx configuration
-COPY docker/nginx/default.conf /etc/nginx/sites-available/default.conf
-
-# Copy the application code
+# Copy the application code into the web root
 COPY . /var/www/html
 
-# Set ownership of the files to the web user
-RUN chown -R www-data:www-data /var/www/html
+# Set the correct permissions for the web server to write to storage and cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose port 80 to the world
-EXPOSE 80
+# Copy the startup script into the container
+COPY entrypoint.sh /entrypoint.sh
+# Make the script executable
+RUN chmod +x /entrypoint.sh
 
-# Specify the command to run on startup
-CMD ["/start.sh"]
+# Tell the container to run our script on start
+CMD ["/entrypoint.sh"]
