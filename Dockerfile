@@ -20,6 +20,8 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions required by Laravel for PostgreSQL
 RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
+COPY docker/php-fpm-pool.conf /etc/php/8.3/fpm/pool.d/www.conf
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
