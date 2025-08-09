@@ -8,5 +8,5 @@ WORKDIR /var/www/html
 COPY . .
 
 # This single command runs all setup and startup tasks.
-# It's more reliable than using an external script.
-CMD ["/bin/bash", "-c", "mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && echo 'Starting server...' && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
+# We've replaced the supervisord command with apache2-foreground to avoid the sudo error.
+CMD ["/bin/bash", "-c", "mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && echo 'Starting server...' && apache2-foreground"]
