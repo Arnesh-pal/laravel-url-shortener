@@ -1,5 +1,5 @@
-# Use a stable, well-maintained PHP 8.3 + Nginx image
-FROM thecodingmachine/php:8.3-v4-nginx
+# Use a stable, well-maintained PHP 8.3 + Apache image
+FROM thecodingmachine/php:8.3-v4-apache
 
 # Copy the application code into the web root
 COPY . /var/www/html
