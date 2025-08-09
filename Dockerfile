@@ -1,5 +1,5 @@
 # Use a standard PHP and Nginx image
-FROM richarvey/nginx-php-fpm:2.2.3
+FROM richarvey/nginx-php-fpm:3.3.0
 
 # Copy our Nginx configuration
 COPY docker/nginx/default.conf /etc/nginx/sites-available/default.conf
