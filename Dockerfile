@@ -1,11 +1,12 @@
 # Use a stable, well-maintained PHP 8.3 + Apache image
 FROM thecodingmachine/php:8.3-v4-apache
 
-# Copy the application code (including entrypoint.sh) into the web root
-COPY . /var/www/html
+# Set the working directory
+WORKDIR /var/www/html
 
-# Make the startup script executable from its new location
-RUN chmod +x /var/www/html/entrypoint.sh
+# Copy the application code into the web root
+COPY . .
 
-# Tell the container to run our script from its new location
-CMD ["/var/www/html/entrypoint.sh"]
+# This single command runs all setup and startup tasks.
+# It's more reliable than using an external script.
+CMD ["/bin/bash", "-c", "mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && echo 'Starting server...' && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
