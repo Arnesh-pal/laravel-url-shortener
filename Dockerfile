@@ -7,6 +7,13 @@ WORKDIR /var/www/html
 # Copy the application code into the web root
 COPY . .
 
-# This single command runs all setup and startup tasks.
-# We've replaced the supervisord command with apache2-foreground to avoid the sudo error.
-CMD ["/bin/bash", "-c", "mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache && php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && echo 'Starting server...' && apache2-foreground"]
+# --- START OF FIX ---
+# Create directories and set permissions during the build (as root).
+# This is more reliable than doing it at runtime.
+RUN mkdir -p storage/framework/{sessions,views,cache} storage/logs bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+# --- END OF FIX ---
+
+# The CMD now only runs tasks required at startup.
+CMD ["/bin/bash", "-c", "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && echo 'Starting server...' && apache2-foreground"]
