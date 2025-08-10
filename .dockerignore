@@ -1,7 +1,4 @@
 .env
-.git
-.github
-node_modules
-vendor
+.git/
+node_modules/
 docker-compose.yml
-Dockerfile

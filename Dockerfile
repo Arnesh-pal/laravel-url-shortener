@@ -1,11 +1,11 @@
-# Start from the official PHP 8.3 FPM image
+# Replace existing Dockerfile with this
 FROM php:8.3-fpm
 
-# Set working directory
-WORKDIR /var/www/html
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y git curl zip unzip nginx libpng-dev libonig-dev libxml2-dev libpq-dev
+# Install system dependencies including PostgreSQL client
+RUN apt-get update && apt-get install -y \
+    git curl zip unzip nginx \
+    libpng-dev libonig-dev libxml2-dev libpq-dev \
+    postgresql-client
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
@@ -13,19 +13,23 @@ RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Set working directory
+WORKDIR /var/www/html
+
 # Copy application files
 COPY . .
 
-# Install dependencies
+# Install dependencies (without dev packages)
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Copy Nginx config and startup script
-COPY docker/nginx.conf /etc/nginx/sites-enabled/default
+# Copy configurations
+COPY docker/nginx.conf /etc/nginx/sites-available/default
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Expose port 80
-EXPOSE 80
+# Set permissions
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Run the startup script
+EXPOSE 8000
+
 CMD ["/start.sh"]
