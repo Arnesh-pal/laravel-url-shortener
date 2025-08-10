@@ -25,11 +25,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy existing application directory contents
 COPY . .
 
-# Allocate a swap file to provide extra memory for Composer
-RUN fallocate -l 1G /swapfile && mkswap /swapfile && swapon /swapfile
-
-# Install PHP dependencies with Composer
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# Install PHP dependencies with parallel downloading disabled to reduce memory usage
+RUN composer install --no-interaction --optimize-autoloader --no-dev --no-parallel
 
 # Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
