@@ -19,12 +19,8 @@ COPY . .
 # Install dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# --- START OF FIX ---
-# Copy the Nginx configuration file into the container
+# Copy Nginx config and startup script
 COPY docker/nginx.conf /etc/nginx/sites-enabled/default
-# --- END OF FIX ---
-
-# Copy startup script and make it executable
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
