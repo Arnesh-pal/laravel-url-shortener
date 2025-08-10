@@ -4,41 +4,31 @@ FROM php:8.3-fpm
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies, including gettext-base for envsubst
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    nginx \
-    libpq-dev \
-    gettext-base
+# Install system dependencies
+RUN apt-get update && apt-get install -y git curl zip unzip nginx libpng-dev libonig-dev libxml2-dev libpq-dev
 
-# Install PHP extensions required by Laravel
+# Install PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy existing application directory contents
+# Copy application files
 COPY . .
 
-# Install PHP dependencies with Composer
+# Install dependencies
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
-# Set permissions for Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# --- START OF FIX ---
+# Copy the Nginx configuration file into the container
+COPY docker/nginx.conf /etc/nginx/sites-enabled/default
+# --- END OF FIX ---
 
-# Copy all configuration files
-COPY docker/php-fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
-COPY docker/default.conf.template /etc/nginx/conf.d/default.conf.template
+# Copy startup script and make it executable
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Expose port (Render will override with $PORT)
+# Expose port 80
 EXPOSE 80
 
 # Run the startup script
