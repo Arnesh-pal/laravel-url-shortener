@@ -32,6 +32,9 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev
 # Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
+# This is the new line to add
+COPY docker/php-fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
+
 # Copy Nginx config template and startup script
 COPY docker/default.conf.template /etc/nginx/conf.d/default.conf.template
 COPY docker/start.sh /start.sh
