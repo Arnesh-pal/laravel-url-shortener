@@ -4,7 +4,7 @@ FROM php:8.3-fpm
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies needed for Laravel and PostgreSQL
+# Install system dependencies needed for Laravel, common extensions, and PostgreSQL
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -14,19 +14,27 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     nginx \
-    libpq-dev
+    libpq-dev \
+    libzip-dev
 
-# Install PHP extensions required by Laravel for PostgreSQL
-RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
+# Install all common PHP extensions required by Laravel
+RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy existing application directory contents
+# Copy only composer files to leverage Docker cache
+COPY composer.json composer.lock ./
+
+# Clear cache and install dependencies without running scripts
+RUN composer clear-cache && \
+    composer install --no-interaction --no-autoloader --no-scripts --prefer-dist
+
+# Copy the rest of the application code
 COPY . .
 
-# Install PHP dependencies with parallel downloading disabled to reduce memory usage
-RUN composer install --no-interaction --optimize-autoloader --no-dev --no-parallel
+# Generate the autoloader and run scripts now that the full app is present
+RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 # Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
