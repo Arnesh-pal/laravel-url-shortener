@@ -4,7 +4,7 @@ FROM php:8.3-fpm
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies needed for Laravel, common extensions, and PostgreSQL
+# Install system dependencies, adding gettext-base for envsubst
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -15,36 +15,29 @@ RUN apt-get update && apt-get install -y \
     unzip \
     nginx \
     libpq-dev \
-    libzip-dev
+    gettext-base
 
-# Install all common PHP extensions required by Laravel
-RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip
+# Install PHP extensions required by Laravel
+RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy only composer files to leverage Docker cache
-COPY composer.json composer.lock ./
-
-# Clear cache and install dependencies without running scripts
-RUN composer clear-cache && \
-    composer install --no-interaction --no-autoloader --no-scripts --prefer-dist
-
-# Copy the rest of the application code
+# Copy existing application directory contents
 COPY . .
 
-# Generate the autoloader and run scripts now that the full app is present
+# Install PHP dependencies with Composer
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 # Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Copy Nginx config and startup script
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy Nginx config template and startup script
+COPY docker/default.conf.template /etc/nginx/conf.d/default.conf.template
 COPY docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
-# Expose port 80
+# Expose port (Render will override with $PORT)
 EXPOSE 80
 
 # Run the startup script
