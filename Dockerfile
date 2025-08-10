@@ -30,6 +30,6 @@ RUN chmod +x /start.sh
 # Set permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-EXPOSE 8000
+RUN echo "Europe/London/Singapore" > /etc/timezone
 
 CMD ["/start.sh"]

@@ -1,26 +1,27 @@
 #!/bin/bash
 set -e
 
-# Generate APP_KEY if not set
-if [ -z "$APP_KEY" ]; then
-  echo "WARNING: APP_KEY is not set. Generating temporary key."
-  export APP_KEY=$(php artisan key:generate --show)
-fi
+# Set PORT from Render environment or default to 8000
+export PORT=${PORT:-8000}
 
-# Add to start.sh before migrations
-php artisan tinker --execute="echo DB::connection()->getPdo() ? 'DB Connected' : 'DB Failed';"
+# Update Nginx config with actual PORT
+sed -i "s/listen .*/listen $PORT;/g" /etc/nginx/sites-available/default
 
-# Run database migrations
+# Permissions
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Database migrations
 php artisan migrate --force
 
-# Cache configuration
+# Cache optimization
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
 # Start services
-php-fpm &
-nginx -g "daemon off;" 
+php-fpm -D
+nginx -g "daemon off;"
 
-# Add to start.sh
-echo "Using PORT: $PORT"
+# Add after service starts
+echo "Checking service health..."
+curl -Ifs http://localhost:$PORT > /dev/null && echo "App is running!" || echo "App failed to start"
